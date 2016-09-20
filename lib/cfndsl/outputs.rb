@@ -8,5 +8,9 @@ module CfnDsl
     def initialize(value = nil)
       @Value = value if value
     end
+
+    def Export(value)
+      @Export = { 'Name' => value }
+    end
   end
 end
