@@ -31,6 +31,11 @@ module CfnDsl
       Fn.new('GetAZs', region)
     end
 
+    # Equivalent to the CloudFormation template built in function Fn::ImportValue
+    def FnImportValue(value)
+      Fn.new('ImportValue', value)
+    end
+
     # Equivalent to the CloudFormation template built in function Fn::Join
     def FnJoin(string, array)
       Fn.new('Join', [string, array])
