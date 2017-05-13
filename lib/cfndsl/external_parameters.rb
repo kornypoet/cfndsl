@@ -40,22 +40,24 @@ module CfnDsl
       parameters
     end
 
-    def add_to_binding(bind, logstream)
+    def add_to_binding(parameters)
       parameters.each_pair do |key, val|
-        logstream.puts("Setting local variable #{key} to #{val}") if logstream
-        bind.eval "#{key} = #{val.inspect}"
+        CfnDsl.debug "Setting parameter #{key} to #{val}"
+        set_param(key, val)
       end
     end
 
     def load_file(fname)
       format = File.extname fname
+      CfnDsl.debug "Loading parameters from file #{fname}"
       case format
       when /ya?ml/
         params = YAML.load_file fname
       when /json/
         params = JSON.parse File.read(fname)
       else
-        raise "Unrecognized extension #{format}"
+        warn "Skipping file #{fname}: unrecognized extension #{format}"
+        return
       end
       params.each { |key, val| set_param(key, val) }
     end

@@ -1,10 +1,20 @@
+# Global CfnDsl options
 module CfnDsl
-  # Set global variables
-  class Globals
-    class << self
-      def reserved_items
-        %w[Resource Parameter Output].freeze
-      end
-    end
+  module_function
+
+  def reserved_items
+    %w[Resource Parameter Output].freeze
+  end
+
+  def debug(msg)
+    warn msg if debug?
+  end
+
+  def debug?
+    @debug
+  end
+
+  def debug!
+    @debug = true
   end
 end

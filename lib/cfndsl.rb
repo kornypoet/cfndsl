@@ -59,34 +59,9 @@ module CfnDsl
   # or even undo things that were done by earlier sections.
 
   # rubocop:disable all
-  def self.eval_file_with_extras(filename, extras = [], logstream = nil)
-    b = binding
-    params = CfnDsl::ExternalParameters.refresh!
-    extras.each do |type, file|
-      case type
-      when :yaml, :json
-        klass_name = type.to_s.upcase
-        logstream.puts("Loading #{klass_name} file #{file}") if logstream
-        params.load_file file
-        params.add_to_binding(b, logstream) unless disable_binding?
-      when :ruby
-        if disable_binding?
-          logstream.puts("Interpreting Ruby files was disabled. #{file} will not be read") if logstream
-        else
-          logstream.puts("Running ruby file #{file}") if logstream
-          b.eval(File.read(file), file)
-        end
-      when :raw
-        params.set_param(*file.split('='))
-        unless disable_binding?
-          logstream.puts("Running raw ruby code #{file}") if logstream
-          b.eval(file, 'raw code')
-        end
-      end
-    end
-
-    logstream.puts("Loading template file #{filename}") if logstream
-    b.eval(File.read(filename), filename)
+  def self.eval_file(fname)
+    CfnDsl.debug "Evaluating template file #{fname}"
+    binding.eval(File.read(fname), fname)
   end
 end
 

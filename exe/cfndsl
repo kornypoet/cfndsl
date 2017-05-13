@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+
+require 'cfndsl/runner'
+CfnDsl::Runner.invoke!
