@@ -1,20 +1,35 @@
 require 'rake'
 require 'rake/tasklib'
 
-require 'cfndsl'
+require 'cfndsl/runner'
 
 module CfnDsl
   # Rake Task
   class RakeTask < Rake::TaskLib
     attr_accessor :cfndsl_opts
 
+    attr_accessor :output_pattern
+    attr_accessor :pattern
+    attr_accessor :pretty
+    attr_accessor :format
+    attr_accessor :defines
+    attr_accessor :extras
+    attr_accessor :debug
+
     def initialize(name = nil)
       yield self if block_given?
 
-      desc 'Generate Cloudformation' unless ::Rake.application.last_description
+      desc 'Generate CloudFormation Templates' unless ::Rake.application.last_description
       task(name || :generate) do |_t, _args|
-        cfndsl_opts[:files].each do |opts|
-          generate(opts)
+        Dir.glob(pattern).each do |fname|
+          options = {}
+          options[:debug] = debug
+          options[:extras]  = extras || []
+          options[:defines] = defines || {}
+          options[:format]  = format || :json
+          options[:pretty]  = pretty
+          options[:pattern] = output_pattern || CfnDsl::Serializer.default_output_pattern
+          CfnDsl::Runner.new(fname, options).invoke!
         end
       end
     end

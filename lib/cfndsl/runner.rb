@@ -7,7 +7,7 @@ module CfnDsl
   # Runner class for invoking CfnDsl from the command line
   class Runner
     def self.options
-      @options ||= {}
+      @options ||= { extras: [], defines: {} }
     end
 
     def self.optparse
@@ -15,12 +15,12 @@ module CfnDsl
         opts.version = CfnDsl::VERSION
         opts.banner = 'Usage: cfndsl [options] FILE'
 
-        opts.on('-o', '--output FILE', 'Write output to file') do |file|
-          options[:output] = file
+        opts.on('-o', '--output [PATTERN]', 'Write output to file PATTERN') do |pattern|
+          options[:pattern] = pattern || CfnDsl::Serializer.default_output_pattern
         end
 
         opts.on('-e', '--extra FILE', 'Import yaml/json file as local parameters') do |fname|
-          ExternalParameters.current.load_file File.expand_path(fname)
+          options[:extras] << fname
         end
 
         opts.on('-p', '--pretty', 'Pretty-format output JSON') do
@@ -33,11 +33,11 @@ module CfnDsl
 
         opts.on('-D', '--define key1:val1', Array, 'Define key-value pairs') do |pairs|
           key_vals = pairs.map { |p| p.split(/:/) if p.include? ':' }.compact
-          ExternalParameters.current.add_to_binding Hash[key_vals]
+          options[:defines] = Hash[key_vals]
         end
 
         opts.on('-d', '--debug', 'Turn on verbose ouptut') do
-          CfnDsl.debug!
+          options[:debug] = true
         end
 
         opts.on_tail('-v', '--version', 'Display the version')
@@ -49,8 +49,21 @@ module CfnDsl
       args = optparse.parse!
       abort(optparse.help) if args.empty?
       template_file = args.shift
-      model = CfnDsl.eval_file template_file
-      Serializer.new(options).serialize model.as_json
+      new(template_file, options).invoke!
+    end
+
+    attr_reader :template, :options
+    def initialize(template, options)
+      @template = template
+      @options = options
+    end
+
+    def invoke!
+      options[:extras].each { |fname| ExternalParameters.current.load_file File.expand_path(fname) }
+      ExternalParameters.current.add_to_binding options[:defines]
+      CfnDsl.debug! if options[:debug]
+      model = CfnDsl.eval_file template
+      Serializer.new(template, options).serialize model.as_json
     end
   end
 end

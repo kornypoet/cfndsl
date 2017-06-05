@@ -78,3 +78,12 @@ task :bump, :type do |_, args|
 
   puts 'All done, travis should pick up and release the gem now!'
 end
+
+require 'cfndsl/rake_task'
+
+CfnDsl::RakeTask.new(:generate) do |t|
+  # t.output_dir = File.dirname(__FILE__)
+  t.pattern = File.expand_path('../sample/t1.rb', __FILE__)
+  t.pretty = true
+  t.debug = true
+end

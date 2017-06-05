@@ -58,7 +58,6 @@ module CfnDsl
   # Note that the order is important, as later extra sections can overwrite
   # or even undo things that were done by earlier sections.
 
-  # rubocop:disable all
   def self.eval_file(fname)
     CfnDsl.debug "Evaluating template file #{fname}"
     binding.eval(File.read(fname), fname)

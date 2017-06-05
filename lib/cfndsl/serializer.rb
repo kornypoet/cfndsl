@@ -4,13 +4,32 @@ require 'yaml'
 module CfnDsl
   # Serializer for handling output options
   class Serializer
-    attr_reader :format, :pretty, :outfile, :outname
+    def self.default_output_pattern
+      '%{output_dir}/%{template_basename}.%{format}'
+    end
 
-    def initialize(options = {})
+    attr_reader :format, :pretty, :outfile, :outname, :pattern, :output_dir, :outdir
+
+    def initialize(template, options = {})
       @format = options[:format] || :json
       @pretty = options[:pretty] || false
-      @outname = options[:output] || 'stdout'
-      @outfile = outname == 'stdout' ? $stdout : File.open(output, 'w')
+      @outdir = File.dirname(template)
+      @pattern = options[:pattern]
+      @outname = options[:pattern] ? interpolate_pattern(template) : 'stdout'
+      @outfile = outname == 'stdout' ? $stdout : File.open(outname, 'w')
+    end
+
+    def interpolate_pattern(template)
+      template_basename = File.basename(template, File.extname(template))
+      lookups = {
+        template_basename: template_basename,
+        output_dir: outdir,
+        format: format
+      }
+      pattern.gsub(/(%{\w+})/) do |match|
+        key = match.gsub(/[%{}]/, '')
+        lookups[key.to_sym]
+      end
     end
 
     def serialize(jsonable)
